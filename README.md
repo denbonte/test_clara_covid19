@@ -5,6 +5,9 @@ Pre-processing and deployment of [NVIDIA Clara COVID19 model](https://ngc.nvidia
 The inference pipeline was developed by NVIDIA. It is based on a segmentation and classification model developed by NVIDIA researchers in conjunction with the NIH.
 
 
+To launch and explore the docker container, run:
+`docker run -it --entrypoint /bin/bash nvcr.io/nvidia/clara/ai-covid-19:0.6.0-2005.1`
+
 ## Troubleshooting
 
 Trying to install the Clara Deploy SDK I had to:
