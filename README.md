@@ -8,6 +8,7 @@ The inference pipeline was developed by NVIDIA. It is based on a segmentation an
 To launch and explore the docker container, run:
 `docker run -it --entrypoint /bin/bash nvcr.io/nvidia/clara/ai-covid-19:0.6.0-2005.1`
 
+
 ## Troubleshooting
 
 Trying to install the Clara Deploy SDK I had to:
@@ -15,6 +16,10 @@ Trying to install the Clara Deploy SDK I had to:
 * (try to) Upgrade NVIDIA's driver: `sudo apt update && sudo apt upgrade`;
 * First step broke nvidia-smi somehow, which is needed to carry out the installation of Clara Deploy SDK. That required a purge of old NVIDIA drivers and was ultimately solved by [re-installing NVIDIA CUDA 10.2 (from NVIDIA CUDA 10.0 page, which is for some reason broken - as it installs 10.2 anyways)](https://developer.nvidia.com/cuda-10.0-download-archive);
 * Finally, run `docker pull nvcr.io/nvidia/clara/ai-covid-19:0.6.0-2005.1`.
+
+Trying to test the model using the `run_docker.sh` at [this page](https://ngc.nvidia.com/catalog/containers/nvidia:clara:ai-covid-19):
+* (very) Similar problem at [this page](https://forums.developer.nvidia.com/t/clara-deploy-sdk-stuck-at-wait-until-trtis-is-ready/124488/2);
+
 
 ## Installation Notes
 * CUDA 10.2 will break TF 1.14/1.15 installed with pip (built over 10.0);

@@ -12,7 +12,7 @@ SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 TESTDATA_DIR=$(readlink -f "${SCRIPT_DIR}"/../test-data)
 
 # Default app name. Change to acutally name, e.g. `nvcr.io/ea-nvidia-clara/clara/ai-lung:0.5.0-2004.5`
-APP_NAME="nvcr.io/ea-nvidia-clara/clara/ai-lung:0.6.0-2005.1"
+APP_NAME="nvcr.io/nvidia/clara/ai-covid-19:0.6.0-2005.1"
 # Default model name, used by the default app. If blank, all available models will be loaded.
 MODEL_NAME="classification_covid-19_v1"
 
