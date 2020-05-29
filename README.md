@@ -1,4 +1,4 @@
-# test_clara_covid19
+# Test NVIDIA Clara COVID19 Model
 
 Pre-processing and deployment of [NVIDIA Clara COVID19 model](https://ngc.nvidia.com/catalog/containers/nvidia:clara:ai-covid-19).
 
