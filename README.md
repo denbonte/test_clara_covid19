@@ -244,6 +244,13 @@ operators:
       # NVIDIA Tensor RT Inference Server [TRTIS] requires at least one GPU to function.
 ```
 
+* The dicom-reader operator converts input DICOM data into volume images in [MetaImage format](https://itk.org/Wiki/ITK/MetaIO/Documentation) format;
+* The segmentation operator performs AI inference against the [NVIDIA Triton Inference Server](https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/index.html), formerly known as TRTIS, to generate segmentation volume images;
+* The classification operator performs AI inference against the [NVIDIA Triton Inference Server](https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/index.html) to infer the probability of COVID-19;
+* The dicom-writer converts the segmented volume image into DICOM instances with a new series instance UID but the same study instance UID of the original DICOM;
+* The register-dicom-output operator registers the DICOM instances with the Clara Deploy DICOM Adapter which in turn stores the instance on external DICOM devices per configuration;
+* The register-volume-images-for-rendering operator registers original and segmented volume images with the Clara Deploy Render Server for visualization.
+
 ## Documentation/Model Notes
 
 From the main NGC page (linked above): 
