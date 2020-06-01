@@ -71,6 +71,178 @@ clara pull pipeline clara_ai_covid19_pipeline
 
 In our case, `Version 0.6.0-2005.1 of 'clara_ai_covid19_pipeline'` was downloaded.
 
+To test everything is working, `cd` into `models/clara/pipelines/clara_ai_covid19_pipeline` and start by unzipping the sample input data and the model(s) data found in the `clara_ai_covid19_pipeline` folder running:
+
+```
+unzip app_covid-19-input_v1.zip -d input
+
+mkdir -p ../../models
+sudo unzip app_covid-19-model_v1.zip -d ../../models/
+
+```
+
+N.B.: NVIDIA is changing some of these names on-the-run, so on their website they are reported wrong and it could be the same happens for this README.
+
+Then, instantiate the pipeline and check everything went as intended by running:
+
+```
+clara create pipelines -p COVID-19-pipeline.yaml
+
+clara list pipelines
+```
+
+The output should look like the following:
+```
+NAME                ID
+COVID-19-pipeline   84258f0413c334ab7947a598ce43fff97
+```
+
+### Pipeline Description
+
+From the [NGC pipeline overview page](https://ngc.nvidia.com/catalog/resources/nvidia:clara:clara_ai_covid19_pipeline):
+
+```
+api-version: 0.4.0
+name: COVID-19-pipeline
+operators:
+# dicom reader operator
+# Input: '/input' mapped directly to the input of the pipeline, which is populated by the DICOM Adaptor.
+# Output:'/output' for saving converted volume image in MHD format to file whose name
+#            is the same as the DICOM series instance ID.
+- name: dicom-reader
+  description: Converts DICOM instances into MHD, one file per DICOM series.
+  container:
+    image: clara/dicom-reader
+    tag: latest
+  input:
+  - path: /input
+  output:
+  - path: /output
+# lung-segmentation operator
+# Input: `/input` containing volume image data, MHD format, with a single volume.
+# Output: `/output` containing segmented volume image, MHD format.
+#         `/publish` containing original and segmented volume images, MHD format,
+#             along with rendering configuration file.
+- name: lung-segmentation
+  description: Segmentation of lung using DL trained model.
+  container:
+    image: clara/ai-lung
+    tag: latest
+  input:
+  - from: dicom-reader
+    path: /input
+  output:
+  - path: /output
+    name: segmentation
+  - path: /publish
+    name: rendering
+  services:
+  - name: trtis
+  # Triton Inference Server, aka TRTIS, required by this AI application.
+    container:
+      image: nvcr.io/nvidia/tensorrtserver
+      tag: 19.08-py3
+      command: ["trtserver", "--model-store=$(NVIDIA_CLARA_SERVICE_DATA_PATH)/models"]
+    requests:
+      gpu: 1
+    # services::connections defines how the TRTIS service is expected to
+    # be accessed. Clara Platform supports network ("http") and
+    # volume ("file") connections.
+    connections:
+      http:
+      # The name of the connection is used to populate an environment
+      # variable inside the operator's container during execution.
+      # This AI application inside the container needs to read this variable to
+      # know the IP and port of TRTIS in order to connect to the service.
+      - name: NVIDIA_CLARA_TRTISURI
+        port: 8000
+      # Some services need a specialized or minimal set of hardware. In this case
+      # NVIDIA Tensor RT Inference Server [TRTIS] requires at least one GPU to function.
+# dicom writer operator
+# Input1: `/input` containing a volume image file, in MHD format, name matching the DICOM series instance UID.
+# Input2: `/dicom` containing original DICOM instances, i.e. dcm file.
+# Output: `/output` containing the DICOM instances converted from the volume image, with updated attributes
+#         based on original DICOM instances.
+- name: dicom-writer
+  description: Converts MHD into DICOM instance with attributes based on the original instances.
+  container:
+    image: clara/dicom-writer
+    tag: latest
+  input:
+  - from: lung-segmentation
+    name: segmentation
+    path: /input
+  - path: /dicom
+  output:
+  - path: /output
+    name: dicom
+# register-volume-images-for-rendering operator
+# Input: Published original and segmented volume images, MHD format, along with rendering configuration file
+#        from the segmentation operator.
+# Output: N/A. Input data will be sent to the destination, namely `renderserver` for Render Server DataSet Service.
+- name: register-volume-images-for-rendering
+  description: Register volume images, MHD format, for rendering.
+  container:
+    image: clara/register-results
+    tag: latest
+    command: ["python", "register.py", "--agent", "renderserver"]
+  input:
+  - from: lung-segmentation
+    name: rendering
+    path: /input
+# register-dicom-output operator
+# Input: `/input` containing DICOM instances in the named output, `dicom` from dicom-writer operator.
+# Output: N/A. Input data will be sent to the destinations, namely DICOM devices, by the Clara DICOM SCU agent.
+- name: register-dicom-output
+  description: Register converted DICOM instances with Results Service to be sent to external DICOM devices.
+  container:
+    image: clara/register-results
+    tag: latest
+    command: ["python", "register.py", "--agent", "ClaraSCU", "--data", "[\"MYPACS\"]"]
+  input:
+  - from: dicom-writer
+    name: dicom
+    path: /input
+# COVID-19 Classification operator
+# Input: original image (DICOM series converted image) and segmented volume images, MHD format.
+# Output: CSV file for classification result: other, covid-early, covid-advanced.
+- name: classification-covid-19
+  description: Classification of COVID-19 using DL model with original and segmentation images.
+  container:
+    image: clara/ai-covid-19
+    tag: latest
+  input:
+  - from: lung-segmentation
+    name: segmentation
+    path: /label_image
+  - from: dicom-reader
+    path: /input
+  output:
+  - path: /output
+    name: classification
+  services:
+  - name: trtis
+  # TensorRT Inference Server, required by this AI application.
+    container:
+      image: nvcr.io/nvidia/tensorrtserver
+      tag: 19.08-py3
+      command: ["trtserver", "--model-store=$(NVIDIA_CLARA_SERVICE_DATA_PATH)/models"]
+    requests:
+      gpu: 1
+    # services::connections defines how the TRTIS service is expected to
+    # be accessed. Clara Platform supports network ("http") and
+    # volume ("file") connections.
+    connections:
+      http:
+      # The name of the connection is used to populate an environment
+      # variable inside the operator's container during execution.
+      # This AI application inside the container needs to read this variable to
+      # know the IP and port of TRTIS in order to connect to the service.
+      - name: NVIDIA_CLARA_TRTISURI
+        port: 8000
+      # Some services need a specialized or minimal set of hardware. In this case
+      # NVIDIA Tensor RT Inference Server [TRTIS] requires at least one GPU to function.
+```
 
 ## Documentation/Model Notes
 
