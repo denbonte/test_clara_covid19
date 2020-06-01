@@ -129,4 +129,4 @@ dmypy.json
 .pyre/
 
 # repo-specific
-model/
+model/classification_covid-19_v1/
