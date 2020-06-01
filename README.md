@@ -1,12 +1,29 @@
 # Test NVIDIA Clara COVID19 Model
 
-Pre-processing and deployment of [NVIDIA Clara COVID19 model](https://ngc.nvidia.com/catalog/containers/nvidia:clara:ai-covid-19).
+Pre-processing and deployment of [NVIDIA NGC (NVIDIA GPU Cloud) Clara COVID19 model](https://ngc.nvidia.com/catalog/containers/nvidia:clara:ai-covid-19).
 
 The inference pipeline was developed by NVIDIA. It is based on a segmentation and classification model developed by NVIDIA researchers in conjunction with the NIH.
 
 
+## Useful Commands
+
 To launch and explore the docker container, run:
 `docker run -it --entrypoint /bin/bash nvcr.io/nvidia/clara/ai-covid-19:0.6.0-2005.1`
+
+
+## Documentation/Model Notes
+
+From the main NGC page (linked above): 
+
+> This example is a containerized AI inference application, developed for use as one of the operators in the Clara Deploy pipelines. This application uses the original image from a lung CT scan and a segmented lung image, both in NIfTI or MetaImage format, to infer the presence of COVID-19. The application is built on the Clara Deploy Python base container, which provides the interfaces with Clara Deploy SDK. Inference is performed on the NVIDIA Triton Inference Server (Triton), formerly known as TensorRT Inference Server (TRTIS).
+
+About the [NVIDIA Triton Inference Server](https://docs.nvidia.com/deeplearning/triton-inference-server/user-guide/docs/):
+
+> NVIDIA Triton Inference Server (formerly TensorRT Inference Server) provides a cloud inferencing solution optimized for NVIDIA GPUs. The server provides an inference service via an HTTP or GRPC endpoint, allowing remote clients to request inferencing for any model being managed by the server. For edge deployments, Triton Server is also available as a shared library with an API that allows the full functionality of the server to be included directly in an application.
+
+Regarding the AI model:
+
+> The application uses the classification_covid-19_v1 model, which was developed by NIH and NVIDIA for use in COVID-19 detection pipeline, but is yet to be published on ngc.nvidia.com. The input tensor of this model is of size 192x192x64 with a single channel. The original image from the lung CT scan is cropped using the data in the lung segmentation image, so that only one simple inference is needed.
 
 
 ## Troubleshooting
