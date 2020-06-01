@@ -5,6 +5,15 @@ Pre-processing and deployment of [NVIDIA NGC (NVIDIA GPU Cloud) Clara COVID19 mo
 The inference pipeline was developed by NVIDIA. It is based on a segmentation and classification model developed by NVIDIA researchers in conjunction with the NIH.
 
 
+## Installing NVIDIA Clara
+
+* [Official Guide](https://docs.nvidia.com/clara/deploy/ClaraInstallation.html)
+* [Clara SDK](https://ngc.nvidia.com/catalog/resources/nvidia:clara:clara_bootstrap)
+* [Model Scripts > Clara CLI](https://ngc.nvidia.com/catalog/resources/nvidia:clara:clara_cli)
+
+After making sure Clara SDK are correctly installed, download the [latest version of cli.zip](https://ngc.nvidia.com/catalog/resources/nvidia:clara:clara_cli/files). Unfortunately for users working on a remote server, there seems no way to download it directly from terminal (e.g., wget). Using `ssh -X` could work though, I've not yet tested it (I've downloaded the package locally and scp'd on the remote server).
+
+
 ## Useful Commands
 
 To launch and explore the docker container, run:
