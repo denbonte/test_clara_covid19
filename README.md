@@ -14,100 +14,7 @@ Regarding the AI model:
 
 > The application uses the classification_covid-19_v1 model, which was developed by NIH and NVIDIA for use in COVID-19 detection pipeline, but is yet to be published on ngc.nvidia.com. The input tensor of this model is of size 192x192x64 with a single channel. The original image from the lung CT scan is cropped using the data in the lung segmentation image, so that only one simple inference is needed.
 
-## Pipeline Set-up
-
-### Installing NVIDIA Clara
-
-* [Official Guide](https://docs.nvidia.com/clara/deploy/ClaraInstallation.html)
-* [Clara SDK](https://ngc.nvidia.com/catalog/resources/nvidia:clara:clara_bootstrap)
-* [Model Scripts > Clara CLI](https://ngc.nvidia.com/catalog/resources/nvidia:clara:clara_cli)
-
-After making sure Clara SDK are correctly installed, download the [latest version of cli.zip](https://ngc.nvidia.com/catalog/resources/nvidia:clara:clara_cli/files). Unfortunately for users working on a remote server, there seems no way to download it directly from terminal (e.g., wget). Using `ssh -X` could work though, I've not yet tested it (I've downloaded the package locally and scp'd on the remote server).
-* [ ] should I upload the cli.zip under `models/clara/install` ?
-
-
-Once all the following steps:
-
-```
-clara dicom start
-clara render start
-clara monitor start
-clara console start
-```
-
-are executed, check everything is up and running exploiting:
-
-```
-helm ls --all 
-```
-
-The output should look like the following (i.e., all the modules `DEPLOYED`):
-
-```
-NAME                	REVISION	UPDATED                 	STATUS  	CHART                            	APP VERSION	NAMESPACE
-clara               	1       	Mon Jun  1 08:31:20 2020	DEPLOYED	clara-0.5.0-2004.7               	1.0        	default  
-clara-console       	1       	Mon Jun  1 08:42:35 2020	DEPLOYED	clara-ux-0.5.0-2004.7            	1.0        	default  
-clara-dicom-adapter 	1       	Mon Jun  1 08:34:48 2020	DEPLOYED	dicom-adapter-0.5.0-2004.7       	1.0        	default  
-clara-monitor-server	1       	Mon Jun  1 08:35:43 2020	DEPLOYED	clara-monitor-server-0.5.0-2004.7	1.0        	default  
-clara-render-server 	1       	Mon Jun  1 08:35:31 2020	DEPLOYED	clara-renderer-0.5.0-2004.7      	1.0        	default 
-```
-
-Similarly, running `kubectl get pods` everything should be in `Running` status:
-
-```
-NAME                                                   READY   STATUS    RESTARTS   AGE
-clara-clara-platformapiserver-7dc6c6699f-zqmm8         1/1     Running   0          31m
-clara-console-mongodb-85f8bd5f95-bw248                 1/1     Running   0          20m
-clara-dicom-adapter-77677c7788-8qthr                   1/1     Running   0          28m
-clara-monitor-server-fluentd-elasticsearch-hcw8f       1/1     Running   0          27m
-clara-monitor-server-grafana-5f874b974d-vdrst          1/1     Running   0          27m
-clara-monitor-server-monitor-server-868c5fcf89-252rd   1/1     Running   0          27m
-clara-render-server-clara-renderer-789fcb6cb6-rd62g    3/3     Running   0          27m
-clara-resultsservice-bcd9ff49d-ckbws                   1/1     Running   0          31m
-clara-ui-6f89b97df8-sfjn5                              1/1     Running   0          31m
-clara-ux-77c9b96ccb-llnlb                              2/2     Running   0          20m
-clara-workflow-controller-69cbb55fc8-lrtrt             1/1     Running   0          31m
-elasticsearch-master-0                                 1/1     Running   0          27m
-elasticsearch-master-1                                 1/1     Running   0          27m
-```
-
-### Clara Deploy AI COVID-19 Classification Pipeline
-
-Pull the Clara pipeline under `models/clara/pipelines/` running:
-
-```
-clara pull pipeline clara_ai_covid19_pipeline
-```
-
-In our case, `Version 0.6.0-2005.1 of 'clara_ai_covid19_pipeline'` was downloaded.
-
-To test everything is working, `cd` into `models/clara/pipelines/clara_ai_covid19_pipeline` and start by unzipping the sample input data and the model(s) data found in the `clara_ai_covid19_pipeline` folder running:
-
-```
-unzip app_covid-19-input_v1.zip -d input
-
-mkdir -p ../../models
-sudo unzip app_covid-19-model_v1.zip -d ../../models/
-
-```
-
-N.B.: NVIDIA is changing some of these names on-the-run, so on their website they are reported wrong and it could be the same happens for this README.
-
-Then, instantiate the pipeline and check everything went as intended by running:
-
-```
-clara create pipelines -p COVID-19-pipeline.yaml
-
-clara list pipelines
-```
-
-The output should look like the following:
-```
-NAME                ID
-COVID-19-pipeline   84258f0413c334ab7947a598ce43fff97
-```
-
-### Pipeline Description
+## Pipeline Description
 
 From the [NGC pipeline overview page](https://ngc.nvidia.com/catalog/resources/nvidia:clara:clara_ai_covid19_pipeline):
 
@@ -260,6 +167,109 @@ operators:
 * The dicom-writer converts the segmented volume image into DICOM instances with a new series instance UID but the same study instance UID of the original DICOM;
 * The register-dicom-output operator registers the DICOM instances with the Clara Deploy DICOM Adapter which in turn stores the instance on external DICOM devices per configuration;
 * The register-volume-images-for-rendering operator registers original and segmented volume images with the Clara Deploy Render Server for visualization.
+
+## Pipeline Set-up
+
+### Installing NVIDIA Clara
+
+* [Official Guide](https://docs.nvidia.com/clara/deploy/ClaraInstallation.html)
+* [Clara SDK](https://ngc.nvidia.com/catalog/resources/nvidia:clara:clara_bootstrap)
+* [Model Scripts > Clara CLI](https://ngc.nvidia.com/catalog/resources/nvidia:clara:clara_cli)
+
+After making sure Clara SDK are correctly installed, download the [latest version of cli.zip](https://ngc.nvidia.com/catalog/resources/nvidia:clara:clara_cli/files). Unfortunately for users working on a remote server, there seems no way to download it directly from terminal (e.g., wget). Using `ssh -X` could work though, I've not yet tested it (I've downloaded the package locally and scp'd on the remote server).
+* [ ] should I upload the cli.zip under `models/clara/install` ?
+
+
+Once all the following steps:
+
+```
+clara dicom start
+clara render start
+clara monitor start
+clara console start
+```
+
+are executed, check everything is up and running exploiting:
+
+```
+helm ls --all 
+```
+
+The output should look like the following (i.e., all the modules `DEPLOYED`):
+
+```
+NAME                	REVISION	UPDATED                 	STATUS  	CHART                            	APP VERSION	NAMESPACE
+clara               	1       	Mon Jun  1 08:31:20 2020	DEPLOYED	clara-0.5.0-2004.7               	1.0        	default  
+clara-console       	1       	Mon Jun  1 08:42:35 2020	DEPLOYED	clara-ux-0.5.0-2004.7            	1.0        	default  
+clara-dicom-adapter 	1       	Mon Jun  1 08:34:48 2020	DEPLOYED	dicom-adapter-0.5.0-2004.7       	1.0        	default  
+clara-monitor-server	1       	Mon Jun  1 08:35:43 2020	DEPLOYED	clara-monitor-server-0.5.0-2004.7	1.0        	default  
+clara-render-server 	1       	Mon Jun  1 08:35:31 2020	DEPLOYED	clara-renderer-0.5.0-2004.7      	1.0        	default 
+```
+
+Similarly, running `kubectl get pods` everything should be in `Running` status:
+
+```
+NAME                                                   READY   STATUS    RESTARTS   AGE
+clara-clara-platformapiserver-7dc6c6699f-zqmm8         1/1     Running   0          31m
+clara-console-mongodb-85f8bd5f95-bw248                 1/1     Running   0          20m
+clara-dicom-adapter-77677c7788-8qthr                   1/1     Running   0          28m
+clara-monitor-server-fluentd-elasticsearch-hcw8f       1/1     Running   0          27m
+clara-monitor-server-grafana-5f874b974d-vdrst          1/1     Running   0          27m
+clara-monitor-server-monitor-server-868c5fcf89-252rd   1/1     Running   0          27m
+clara-render-server-clara-renderer-789fcb6cb6-rd62g    3/3     Running   0          27m
+clara-resultsservice-bcd9ff49d-ckbws                   1/1     Running   0          31m
+clara-ui-6f89b97df8-sfjn5                              1/1     Running   0          31m
+clara-ux-77c9b96ccb-llnlb                              2/2     Running   0          20m
+clara-workflow-controller-69cbb55fc8-lrtrt             1/1     Running   0          31m
+elasticsearch-master-0                                 1/1     Running   0          27m
+elasticsearch-master-1                                 1/1     Running   0          27m
+```
+
+### Clara Deploy AI COVID-19 Classification Pipeline
+
+Pull the Clara pipeline under `models/clara/pipelines/` running:
+
+```
+clara pull pipeline clara_ai_covid19_pipeline
+```
+
+In our case, `Version 0.6.0-2005.1 of 'clara_ai_covid19_pipeline'` was downloaded.
+
+To test everything is working, `cd` into `models/clara/pipelines/clara_ai_covid19_pipeline` and start by unzipping the sample input data and the model(s) data found in the `clara_ai_covid19_pipeline` folder running:
+
+```
+unzip app_covid-19-input_v1.zip -d input
+
+mkdir -p ../../models
+sudo unzip app_covid-19-model_v1.zip -d ../../models/
+
+```
+
+N.B.: NVIDIA is changing some of these names on-the-run, so on their website they are reported wrong and it could be the same happens for this README.
+
+Then, instantiate the pipeline and check everything went as intended by running:
+
+```
+clara create pipelines -p COVID-19-pipeline.yaml
+
+clara list pipelines
+```
+
+The output should look like the following:
+```
+NAME                ID
+COVID-19-pipeline   84258f0413c334ab7947a598ce43fff97
+```
+
+Once everything is set up, we are ready to feed data to the pipeline. As Clara is conceived as modular, this feeding (as well as "catching" the output) must be performed using a DICOM Service Class User application:
+
+> You need an external DICOM Service Class User (SCU) application to send images to the Clara DICOM Adapter (acting as a DICOM SCP). Similarly, when your pipeline finishes executing, you may want to send the output to an external DICOM receiver.
+
+Following NVIDIA's example, we make use of the [DICOM Toolkit DCMTK](https://dicom.offis.de/dcmtk.php.en), that can be installed by executing:
+
+```
+sudo apt-get install dcmtk
+```
 
 ## Troubleshooting
 
