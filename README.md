@@ -247,7 +247,7 @@ sudo unzip app_covid-19-model_v1.zip -d ../../models/
 
 N.B.: NVIDIA is changing some of these names on-the-run, so on their website they are reported wrong and it could be the same happens for this README.
 
-Then, instantiate the pipeline and check everything went as intended by running:
+Then, create the pipeline and check everything went as intended by running:
 
 ```
 clara create pipelines -p COVID-19-pipeline.yaml
@@ -270,6 +270,27 @@ Following NVIDIA's example, we make use of the [DICOM Toolkit DCMTK](https://dic
 ```
 sudo apt-get install dcmtk
 ```
+
+DCMTK's [`storescp`](https://support.dcmtk.org/docs/storescp.html) can receive both DICOM images and other DICOM composite objects, and thus can be used to "catch" the pipeline output. In our case, we use the folder `output` as an end-point. Hence, after `cd`ing in the main directory:
+
+```
+mkdir -p output
+cd output
+
+# specify the TCP/IP port number to listen on
+export PORT=1004
+
+# start the Service Class Provider (SCP)
+sudo storescp -v --fork --aetitle MYPACS $PORT
+```
+
+Following NVIDIA's example, the Application Entity title of the DICOM receiver is, in this case, named MYPACS. Both the name and the port can be changed arbitrarily as they need to be specified manually when configuring the `dicom-server-config.yaml`file. Regarding the latter, located under `~/.clara/charts/dicom-adapter/files`, it may happen it contains a configuration that regards other Clara pipelines (and is thus useless in our case)
+
+we need to modify it so that it will contain the following blocks:
+
+
+N.B.: the yaml file found in the actual Clara pipeline is populated with useless content (regarding other pipelines).
+
 
 ## Troubleshooting
 
